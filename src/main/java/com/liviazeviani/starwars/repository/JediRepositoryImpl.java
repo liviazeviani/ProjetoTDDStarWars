@@ -10,7 +10,9 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -27,7 +29,7 @@ public class JediRepositoryImpl implements JediRepository {
     public JediRepositoryImpl(JdbcTemplate jdbcTemplate, DataSource dataSource) {
         this.jdbcTemplate = jdbcTemplate;
 
-        this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource) //datasource fará a query sql
+        this.simpleJdbcInsert = new SimpleJdbcInsert(dataSource) //datasource fará a query sql, apenas o JDBC pode gerar incongruências
                 .withTableName("jedis") //nome da tabela
                 .usingGeneratedKeyColumns("id"); //id da coluna será o id
 
@@ -56,21 +58,44 @@ public class JediRepositoryImpl implements JediRepository {
 
     @Override
     public List<Jedi> findAll() {
-        return null;
+        return jdbcTemplate.query("SELECT + from jedis",
+                (rs, rowNumber) -> {
+                    Jedi jedi = new Jedi();
+                    jedi.setId(rs.getInt("id"));
+                    jedi.setName(rs.getString("name"));
+                    jedi.setStrength(rs.getInt("strength"));
+                    jedi.setVersion(rs.getInt("version"));
+                    return jedi;
+
+                });
     }
 
     @Override
+    //aqui eu busco e atualizo a tabela
     public boolean update(Jedi jedi) {
-        return false;
-    }
+        return jdbcTemplate.update("UPDATE jedis SET name = ?, strength = ?, version = ? WHERE id = ?",
+                jedi.getName(),
+                jedi.getStrength(),
+                jedi.getVersion(),
+                jedi.getId()) == 1; } //aqui eu quero que todo id comece com 1
 
     @Override
     public Jedi save(Jedi jedi) {
-        return null;
+        Map<String, Object> parameters = new HashMap<>(1);
+        parameters.put("name", jedi.getName());
+        parameters.put("strength", jedi.getStrength());
+        parameters.put("version", jedi.getVersion());
+
+        Number newId = simpleJdbcInsert.executeAndReturnKey(parameters); //não foi necessário colocar uma query aqui, pois é feito pela classe simpleJdbcInsert
+
+        logger.info("Inserting Jedi intro database, generated id is: {}", newId);
+
+        jedi.setId((int) newId);
+        return jedi;
     }
 
     @Override
     public boolean delete(int id) {
-        return false;
+        return jdbcTemplate.update("DELETE FROM jedis WHERE id = ?", id) ==1;
     }
 }
