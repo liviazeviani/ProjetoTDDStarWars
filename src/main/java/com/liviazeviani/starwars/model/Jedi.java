@@ -3,7 +3,7 @@ package com.liviazeviani.starwars.model;
 public class Jedi {
 
     //mapeando as características
-     private int id;
+     private Integer id;
      private String name;
      private int strength;
      private int version;
@@ -12,7 +12,7 @@ public class Jedi {
      //construtores
     public Jedi (){}
 
-    public Jedi(int id, String name, int strength, int version) {
+    public Jedi(Integer id, String name, int strength, int version) {
         this.id = id;
         this.name = name;
         this.strength = strength;
@@ -50,7 +50,7 @@ public class Jedi {
     public int getId(){
         return id;
     }
-    public void setId(int id){
+    public void setId(Integer id){
         this.id = id;
     }
 
