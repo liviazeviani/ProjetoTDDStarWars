@@ -17,6 +17,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.is;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -38,8 +39,8 @@ public class JediControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    @DisplayName("GET /jedi/1 - SUCESS")
-    public void TestGetJediByIdWithSucess() throws Exception{
+    @DisplayName("GET /jedi/1 - SUCCESS")
+    public void TestGetJediByIdWithSuccess() throws Exception{
 
         //cenário
         Jedi mockJedi = new Jedi(1, "Han Solo", 10, 1);
@@ -70,6 +71,30 @@ public class JediControllerTest {
     }
 
     // TODO teste do POST com sucesso
+
+    @Test
+    @DisplayName("POST /jedi - SUCCESS")
+    public void TestPostJediWithSuccess() throws  Exception{
+
+        //cenário
+        Jedi mockJedi = new Jedi(1, "HanSolo", 10, 1);
+        Mockito.doReturn(mockJedi).when(jediService).save(any());
+
+        //execução
+        mockMvc.perform(post("/jedi"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(header().string(HttpHeaders.ETAG, "\"1\""))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is("HanSolo")))
+                .andExpect((jsonPath("$.strength", is(10))))
+                .andExpect((jsonPath("$.version", is(1))));
+
+
+    }
+
     // TODO teste do PUT com sucesso
     // TODO teste do PUT com versão já existinte - retorna conflito
     // TODO teste do PUT com erro - not found
